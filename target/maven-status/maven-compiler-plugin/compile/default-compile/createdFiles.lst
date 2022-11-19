@@ -1,0 +1,13 @@
+com\andy\portfolio\diningreviewapi\controllers\ReviewController.class
+com\andy\portfolio\diningreviewapi\model\ApprovalRequestReview.class
+com\andy\portfolio\diningreviewapi\controllers\RestaurantController.class
+com\andy\portfolio\diningreviewapi\model\Restaurant.class
+com\andy\portfolio\diningreviewapi\model\Review.class
+com\andy\portfolio\diningreviewapi\repositories\ReviewRepository.class
+com\andy\portfolio\diningreviewapi\model\AdminReviewStatus.class
+com\andy\portfolio\diningreviewapi\controllers\AdminController.class
+com\andy\portfolio\diningreviewapi\repositories\RestaurantRepository.class
+com\andy\portfolio\diningreviewapi\model\User.class
+com\andy\portfolio\diningreviewapi\DiningReviewApiApplication.class
+com\andy\portfolio\diningreviewapi\repositories\UserRepository.class
+com\andy\portfolio\diningreviewapi\controllers\UserController.class

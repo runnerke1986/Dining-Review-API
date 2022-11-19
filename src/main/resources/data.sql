@@ -1,0 +1,1 @@
+insert into USERS(ID, NAME, CITY, STATE, ZIPCODE, HASPEANUTALLERGY, HASEGGALLERGY, HASDAIRYALLERGY, ISADMIN) values (1, 'Wendy Van Lerberghe', 'Sint-Pieters-Leeuw', 'Vlaams-Brabant', 1600, true, true, true, false);
