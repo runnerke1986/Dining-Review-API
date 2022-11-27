@@ -6,5 +6,5 @@ package com.andy.portfolio.diningreviewapi.model;
 public enum AdminReviewStatus {
     PENDING,
     ACCEPTED,
-    REJECTED;
+    REJECTED
 }

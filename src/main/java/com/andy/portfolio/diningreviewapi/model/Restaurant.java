@@ -1,32 +1,51 @@
 package com.andy.portfolio.diningreviewapi.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import javax.validation.constraints.Pattern;
 
 @Entity
 @Table(name="restaurant")
+@RequiredArgsConstructor
 @Getter @Setter
-@NoArgsConstructor
 public class Restaurant {
     @Id
     @GeneratedValue
     Long id;
-    @Column(unique = true)
+
+    @Pattern(regexp = "[a-zA-Z-]+")
+    @NonNull
+    @Column(name="name")
     private String name;
 
+    @Pattern(regexp = "[a-zA-Z-]+")
+    @NonNull
+    @Column(name="country")
     private String country;
 
+    @Pattern(regexp = "[\\w -]+")
+    @NonNull
+    @Column(name="zip_code")
+    private String zipCode;
+
+    @Pattern(regexp = "[a-zA-Z-]+")
+    @NonNull
+    @Column(name="city")
     private String city;
 
-    private Integer averageScorePeanut;
+    @Column(name="average_score_peanut")
+    private Long averageScorePeanut;
 
-    private Integer averageScoreEgg;
+    @Column(name="average_score_egg")
+    private Long averageScoreEgg;
 
-    private Integer averageScoreDairy;
+    @Column(name="average_score_dairy")
+    private Long averageScoreDairy;
 
-    private Integer overallScore;
+    @Column(name="overall_score")
+    private Long overallScore;
 }
