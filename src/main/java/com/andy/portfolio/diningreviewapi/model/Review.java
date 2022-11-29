@@ -8,6 +8,7 @@ import lombok.Setter;
 import javax.persistence.*;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
 
@@ -20,9 +21,9 @@ public class Review {
     @GeneratedValue
     private Long id;
 
-    @Pattern(regexp = "[a-zA-Z-]+")
+    @Pattern(regexp = "[a-zA-Z- ]+")
     @Column(name="user_name")
-    @NonNull
+    @NotBlank(message = "Username is mandatory!")
     private String userName;
 
 
@@ -59,6 +60,10 @@ public class Review {
     public Review(String userName, Long restaurantId, Integer peanutScore, Integer eggScore, Integer dairyScore, String commentary) {
         this.userName = userName;
         this.restaurantId = restaurantId;
+        this.peanutScore = peanutScore;
+        this.eggScore = eggScore;
+        this.dairyScore = dairyScore;
+        this.commentary = commentary;
         this.setAdminReviewStatus(AdminReviewStatus.PENDING);
     }
 }

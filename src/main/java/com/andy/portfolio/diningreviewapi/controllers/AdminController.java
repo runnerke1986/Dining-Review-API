@@ -8,11 +8,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 //all actions in this endpoint should only be possible if the user executing them has been defined as isAdmin
-
+@RestController
 @RequestMapping("/admin")
 public class AdminController {
     final private UserRepository userRepository;
@@ -25,11 +26,16 @@ public class AdminController {
         this.restaurantRepository = restaurantRepository;
     }
 
-    @PutMapping("/validate-review")
-    private Review setApprovalStatusReview(@RequestBody Review review, ApprovalRequestReview approvalRequestReview ) throws Exception {
-        if(approvalRequestReview.getReviewAccepted()){
-
+    @PutMapping("/validate-review/{id}/{isAccepted}")
+    private Review setApprovalStatusReview(@PathVariable Long id, @PathVariable Boolean isAccepted ) throws Exception {
+        var reviewOptional = Optional.of(this.reviewRepository.findById(id));
+        if (reviewOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+        var review = reviewOptional.get();
+        if(isAccepted){
             review.setAdminReviewStatus(AdminReviewStatus.ACCEPTED);
+            this.reviewRepository.save(review);
             updateScores(review);
         }else{
             review.setAdminReviewStatus(AdminReviewStatus.REJECTED);
@@ -39,7 +45,6 @@ public class AdminController {
     }
 
     //checks if the user is authorized (is admin?)
-    @GetMapping("/authorized")
     public Boolean userIsAdmin(String name) throws Exception{
         if(!this.userRepository.existsByName(name)){
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The provided username doesn't exist in the database.");
@@ -49,9 +54,8 @@ public class AdminController {
     }
 
     // check if the user who submitted a review is known in the db or not
-    @GetMapping("/check-user-exists")
-    public Boolean userSubmittedReviewExists(Review submittedReview){
-        return this.userRepository.existsByName(submittedReview.getUserName());
+    public Boolean userSubmittedReviewExists(String userName){
+        return this.userRepository.existsByName(userName);
     }
 
     //update scores from the restaurant from the accepted review
@@ -79,10 +83,10 @@ public class AdminController {
             }
             countReviews++;
         }
-        restaurantToUpdate.setAverageScoreEgg((long) (sumEggScore / countReviews));
-        restaurantToUpdate.setAverageScoreDairy((long) (sumDairyScore / countReviews));
-        restaurantToUpdate.setAverageScorePeanut((long) (sumPeanutScore / countReviews));
-        restaurantToUpdate.setOverallScore((long) ((sumDairyScore + sumEggScore + sumPeanutScore) / 3));
+        restaurantToUpdate.setAverageScoreEgg(Double.valueOf(sumEggScore / countReviews));
+        restaurantToUpdate.setAverageScoreDairy(Double.valueOf(sumDairyScore / countReviews));
+        restaurantToUpdate.setAverageScorePeanut(Double.valueOf(sumPeanutScore / countReviews));
+        restaurantToUpdate.setOverallScore ((restaurantToUpdate.getAverageScoreDairy() + restaurantToUpdate.getAverageScoreEgg() + restaurantToUpdate.getAverageScorePeanut()) / 3);
         this.restaurantRepository.save(restaurantToUpdate);
     }
 
@@ -96,7 +100,7 @@ public class AdminController {
     @DeleteMapping("/delete-profile/{userName}")
     public User deleteProfile(@PathVariable String userName) throws Exception{
         Optional<User> userOptional = Optional.ofNullable(this.userRepository.findByName(userName));
-        if (userOptional.isEmpty()){
+        if (!userSubmittedReviewExists(userName)){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The provided username was already removed from the database or never existed.");
         }
         User userToDelete = userOptional.get();

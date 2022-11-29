@@ -13,4 +13,5 @@ public interface ReviewRepository extends CrudRepository<Review, Integer> {
     List<Review> findByRestaurantIdAndDairyScoreGreaterThan(Long restaurantId, Integer minScore);
     List<Review> findByRestaurantIdAndPeanutScoreGreaterThan(Long restaurantId, Integer minScore);
     List<Review> findByRestaurantId(Long id);
+    Review findById(Long id);
 }

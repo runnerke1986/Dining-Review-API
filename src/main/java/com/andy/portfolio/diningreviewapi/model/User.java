@@ -1,40 +1,37 @@
 package com.andy.portfolio.diningreviewapi.model;
 
 import lombok.*;
-
-
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
 @Entity
 @RequiredArgsConstructor
-@NoArgsConstructor
+//@NoArgsConstructor
 @Table(name="users") // Attention! Used 'users' as table name since the former used 'user' is a reserved keyword in sql
 @Getter @Setter
+//@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class User {
     @Id
     @GeneratedValue
     private Long id;
 
-
     @Column(name="name",unique = true)
-    @NonNull
-    @Pattern(regexp = "[a-zA-Z-]+")
-    @NotBlank
+    @NotBlank(message = "Name is mandatory!")
+    @Pattern(regexp = "[a-zA-Z- ]+")
     private String name;
 
-    @NonNull
+    @NotBlank(message = "City name is mandatory!")
     @Pattern(regexp = "[a-zA-Z-]+")
     @Column(name="city")
     private String city;
 
-    @NonNull
+    @NotBlank(message = "State name is mandatory!")
     @Pattern(regexp = "[a-zA-Z-]+")
     @Column(name="state")
     private String state;
 
-    @NonNull
+    @NotBlank(message = "Zipcode is mandatory!")
     @Pattern(regexp = "[\\w -]+")
     @Column(name="zipcode")
     private String zipCode;

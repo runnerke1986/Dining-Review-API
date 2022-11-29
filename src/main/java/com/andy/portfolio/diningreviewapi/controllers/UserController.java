@@ -3,9 +3,13 @@ package com.andy.portfolio.diningreviewapi.controllers;
 import com.andy.portfolio.diningreviewapi.model.User;
 import com.andy.portfolio.diningreviewapi.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
+import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -19,7 +23,7 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/register-user")
-    public User addUser(@RequestBody User user) throws Exception {
+    public User addUser(@Valid @RequestBody User user) throws Exception {
         if(this.userRepository.existsByName(user.getName())){
             throw new ResponseStatusException(HttpStatus.IM_USED, "The provided username already exists in the database. Please enter a different one.");
         }
@@ -31,7 +35,7 @@ public class UserController {
     public User modifyUser(@RequestBody User user, @PathVariable String userName) throws Exception {
         var userToUpdateOptional = Optional.ofNullable(this.userRepository.findByName(userName));
         if (userToUpdateOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The provided username doesn't exist in the database. Please check your provided data or register.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The provided username doesn't exist in the database. Please check your provided data or register.");
         }
         var userToUpdate = userToUpdateOptional.get();
 
@@ -58,5 +62,18 @@ public class UserController {
     @GetMapping("/profile")
     public User getUserProfileDetails(@RequestParam(name="name") String name){
         return this.userRepository.findByName(name);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, String> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
     }
 }

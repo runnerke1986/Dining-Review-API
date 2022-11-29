@@ -3,20 +3,21 @@ package com.andy.portfolio.diningreviewapi.controllers;
 import com.andy.portfolio.diningreviewapi.model.Restaurant;
 import com.andy.portfolio.diningreviewapi.repositories.RestaurantRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/restaurant")
 public class RestaurantController {
     final private RestaurantRepository restaurantRepository;
 
-    final Pattern zipCodePattern = Pattern.compile("[a-z0-9- ]{0,10}[a-z0-9]+");
     public RestaurantController(final RestaurantRepository restaurantRepository){this.restaurantRepository = restaurantRepository;}
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -77,7 +78,6 @@ public class RestaurantController {
 
     @GetMapping("/city/{zipcode}")
     public Iterable<Restaurant> getAllRestaurantsFromCityByZipCode(@PathVariable String zipCode, Boolean ascendingOrder) throws Exception {
-        validateZipCode(zipCode);
         if(ascendingOrder) {
             return this.restaurantRepository.findByZipCodeOrderByNameAsc(zipCode);
         } else {
@@ -87,16 +87,14 @@ public class RestaurantController {
 
     @GetMapping("/scores")
     public Iterable<Restaurant> getAllRestaurantsWithScoresByZipcode(String zipCode) throws Exception {
-        validateZipCode(zipCode);
         return this.restaurantRepository.findByZipCodeAndAverageScoreEggNotNullOrAverageScoreDairyNotNullOrAverageScorePeanutNotNullOrderByZipCodeDesc(zipCode);
     }
-
 
     @ResponseStatus(HttpStatus.FOUND)
     @GetMapping("/id/{id}")
     public Restaurant getRestaurant(@PathVariable Long id){
         if(!this.restaurantRepository.existsById(id)){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found in database.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Restaurant not found in database.");
         }
         return this.restaurantRepository.findById(id);
     }
@@ -108,18 +106,22 @@ public class RestaurantController {
     }
 
     public Boolean validateRestaurant(Restaurant restaurant) throws Exception {
-        validateZipCode(restaurant.getZipCode());
         if (this.restaurantRepository.existsByNameAndZipCode(restaurant.getName(), restaurant.getZipCode())) {
             throw new ResponseStatusException(HttpStatus.IM_USED, "The provided restaurant already exists in the database. Please enter a different one.");
         }
         return true;
     }
 
-    public Boolean validateZipCode(String zipCode) throws Exception{
-        Matcher zipCodeMatcher = zipCodePattern.matcher(zipCode);
-        if (!zipCodeMatcher.matches()) {
-            throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED, "The provided zipcode is of an invalid format.");
-        }
-        return true;
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, String> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
     }
 }
