@@ -1,6 +1,9 @@
 package com.andy.portfolio.diningreviewapi.controllers;
 
-import com.andy.portfolio.diningreviewapi.model.*;
+import com.andy.portfolio.diningreviewapi.model.AdminReviewStatus;
+import com.andy.portfolio.diningreviewapi.model.Restaurant;
+import com.andy.portfolio.diningreviewapi.model.Review;
+import com.andy.portfolio.diningreviewapi.model.User;
 import com.andy.portfolio.diningreviewapi.repositories.RestaurantRepository;
 import com.andy.portfolio.diningreviewapi.repositories.ReviewRepository;
 import com.andy.portfolio.diningreviewapi.repositories.UserRepository;
@@ -8,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,8 +29,8 @@ public class AdminController {
     }
 
     @PutMapping("/validate-review/{id}/{isAccepted}")
-    private Review setApprovalStatusReview(@PathVariable Long id, @PathVariable Boolean isAccepted ) throws Exception {
-        var reviewOptional = Optional.of(this.reviewRepository.findById(id));
+    private Review setApprovalStatusReview(@PathVariable Long id, @PathVariable Boolean isAccepted ) {
+        var reviewOptional = Optional.ofNullable(this.reviewRepository.findById(id));
         if (reviewOptional.isEmpty()){
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
         }
@@ -44,8 +46,9 @@ public class AdminController {
         return review;
     }
 
+    @GetMapping("/check-authority")
     //checks if the user is authorized (is admin?)
-    public Boolean userIsAdmin(String name) throws Exception{
+    public Boolean userIsAdmin(String name) {
         if(!this.userRepository.existsByName(name)){
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The provided username doesn't exist in the database.");
         }
@@ -59,7 +62,7 @@ public class AdminController {
     }
 
     //update scores from the restaurant from the accepted review
-    private void updateScores(Review review) throws Exception{
+    private void updateScores(Review review) {
         Optional <Restaurant> restaurantOptional = Optional.ofNullable(this.restaurantRepository.findById(review.getRestaurantId()));
         if(restaurantOptional.isEmpty()){
             review.setAdminReviewStatus(AdminReviewStatus.REJECTED);
@@ -71,6 +74,11 @@ public class AdminController {
         Integer sumEggScore = 0;
         Integer sumPeanutScore = 0;
         Integer countReviews  = 0;
+        double averageScoreEgg;
+        double averageScorePeanut;
+        double averageScoreDairy;
+
+        //calculate the sum of the scores if any and count total reviews, so we can calculate the average afterwards
         for(Review acceptedReview : allAcceptedReviews){
             if(acceptedReview.getDairyScore() != null){
                 sumDairyScore += acceptedReview.getDairyScore();
@@ -83,10 +91,15 @@ public class AdminController {
             }
             countReviews++;
         }
-        restaurantToUpdate.setAverageScoreEgg(Double.valueOf(sumEggScore / countReviews));
-        restaurantToUpdate.setAverageScoreDairy(Double.valueOf(sumDairyScore / countReviews));
-        restaurantToUpdate.setAverageScorePeanut(Double.valueOf(sumPeanutScore / countReviews));
-        restaurantToUpdate.setOverallScore ((restaurantToUpdate.getAverageScoreDairy() + restaurantToUpdate.getAverageScoreEgg() + restaurantToUpdate.getAverageScorePeanut()) / 3);
+
+        //calculate the average scores from each allergy and the total restaurant score
+        averageScoreEgg = getAverageScore(sumEggScore, countReviews);
+        averageScoreDairy = getAverageScore(sumDairyScore, countReviews);
+        averageScorePeanut = getAverageScore(sumPeanutScore, countReviews);
+        restaurantToUpdate.setAverageScoreEgg(averageScoreEgg);
+        restaurantToUpdate.setAverageScoreDairy(averageScoreDairy);
+        restaurantToUpdate.setAverageScorePeanut(averageScorePeanut);
+        restaurantToUpdate.setOverallScore (getAverageScore((averageScoreEgg + averageScoreDairy + averageScorePeanut),3));
         this.restaurantRepository.save(restaurantToUpdate);
     }
 
@@ -98,19 +111,18 @@ public class AdminController {
 
     @ResponseStatus(HttpStatus.GONE)
     @DeleteMapping("/delete-profile/{userName}")
-    public User deleteProfile(@PathVariable String userName) throws Exception{
-        Optional<User> userOptional = Optional.ofNullable(this.userRepository.findByName(userName));
+    public User deleteProfile(@PathVariable String userName) {
         if (!userSubmittedReviewExists(userName)){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The provided username was already removed from the database or never existed.");
         }
-        User userToDelete = userOptional.get();
+        User userToDelete = this.userRepository.findByName(userName);
         this.userRepository.delete(userToDelete);
         return userToDelete;
     }
 
     @ResponseStatus(HttpStatus.GONE)
     @DeleteMapping("/delete-restaurant/{id}")
-    public Restaurant deleteRestaurant(@PathVariable Long id) throws Exception {
+    public Restaurant deleteRestaurant(@PathVariable Long id) {
         Optional<Restaurant> restaurantOptional = Optional.ofNullable(this.restaurantRepository.findById(id));
         if (restaurantOptional.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The provided restaurant was already removed from the database or never existed.");
@@ -122,7 +134,7 @@ public class AdminController {
         return restaurantToDelete;
     }
 
-    public void deleteReviewsFromRestaurant(Long restaurantId) throws Exception{
+    public void deleteReviewsFromRestaurant(Long restaurantId) {
         Optional<Restaurant> restaurantOptional = Optional.ofNullable(this.restaurantRepository.findById(restaurantId));
         if (restaurantOptional.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The provided restaurant was already removed from the database or never existed.");
@@ -131,5 +143,9 @@ public class AdminController {
         for(Review reviewToDelete : reviewsToDelete){
             this.reviewRepository.delete(reviewToDelete);
         }
+    }
+
+    private static double getAverageScore(double sumScore, Integer countReviews) {
+        return Math.round((sumScore / countReviews) * 100.00) / 100.00;
     }
 }

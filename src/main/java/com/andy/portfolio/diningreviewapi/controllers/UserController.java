@@ -23,7 +23,7 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/register-user")
-    public User addUser(@Valid @RequestBody User user) throws Exception {
+    public User addUser(@Valid @RequestBody User user) {
         if(this.userRepository.existsByName(user.getName())){
             throw new ResponseStatusException(HttpStatus.IM_USED, "The provided username already exists in the database. Please enter a different one.");
         }
@@ -32,7 +32,7 @@ public class UserController {
     }
 
     @PutMapping("/update-profile/{userName}")
-    public User modifyUser(@RequestBody User user, @PathVariable String userName) throws Exception {
+    public User modifyUser(@RequestBody User user, @PathVariable String userName) {
         var userToUpdateOptional = Optional.ofNullable(this.userRepository.findByName(userName));
         if (userToUpdateOptional.isEmpty()){
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The provided username doesn't exist in the database. Please check your provided data or register.");

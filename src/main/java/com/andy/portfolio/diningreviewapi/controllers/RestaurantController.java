@@ -77,7 +77,7 @@ public class RestaurantController {
     }
 
     @GetMapping("/city/{zipcode}")
-    public Iterable<Restaurant> getAllRestaurantsFromCityByZipCode(@PathVariable String zipCode, Boolean ascendingOrder) throws Exception {
+    public Iterable<Restaurant> getAllRestaurantsFromCityByZipCode(@PathVariable String zipCode, Boolean ascendingOrder) {
         if(ascendingOrder) {
             return this.restaurantRepository.findByZipCodeOrderByNameAsc(zipCode);
         } else {
@@ -86,7 +86,7 @@ public class RestaurantController {
     }
 
     @GetMapping("/scores")
-    public Iterable<Restaurant> getAllRestaurantsWithScoresByZipcode(String zipCode) throws Exception {
+    public Iterable<Restaurant> getAllRestaurantsWithScoresByZipcode(String zipCode) {
         return this.restaurantRepository.findByZipCodeAndAverageScoreEggNotNullOrAverageScoreDairyNotNullOrAverageScorePeanutNotNullOrderByZipCodeDesc(zipCode);
     }
 

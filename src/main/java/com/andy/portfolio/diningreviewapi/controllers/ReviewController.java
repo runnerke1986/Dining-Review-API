@@ -22,7 +22,7 @@ import java.util.Optional;
 public class ReviewController {
     private final ReviewRepository reviewRepository;
     private final RestaurantRepository restaurantRepository;
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public ReviewController(final ReviewRepository reviewRepository, final RestaurantRepository restaurantRepository, final UserRepository userRepository){
         this.reviewRepository = reviewRepository;
@@ -33,7 +33,7 @@ public class ReviewController {
     //user submits a review with default status pending
     @PostMapping("/submit-review")
     @ResponseStatus(HttpStatus.CREATED)
-    public Review submitReview(@Valid @RequestBody Review review) throws Exception {
+    public Review submitReview(@Valid @RequestBody Review review) {
         validateRestaurant(review.getRestaurantId());
         var userOptional = Optional.ofNullable(this.userRepository.findByName(review.getUserName()));
         if (userOptional.isEmpty()){
@@ -57,7 +57,7 @@ public class ReviewController {
     //query method for web application
     @GetMapping("/query-scores")
     public List<Review> queryReviewFromRestaurant(
-            @RequestParam(name="restaurant-id", required = true) Long restaurantId,
+            @RequestParam(name="restaurant-id") Long restaurantId,
             @RequestParam(name="dairy", required = false) Boolean dairy,
             @RequestParam(name="egg", required = false) Boolean egg,
             @RequestParam(name="peanut", required = false) Boolean peanut,
@@ -75,12 +75,11 @@ public class ReviewController {
         }
     }
 
-    public Boolean validateRestaurant(Long restaurantId){
+    public void validateRestaurant(Long restaurantId){
         Optional<Restaurant> restaurantOptional = Optional.ofNullable(this.restaurantRepository.findById(restaurantId));
         if (restaurantOptional.isEmpty()){
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Restaurant not found!");
         }
-        return true;
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

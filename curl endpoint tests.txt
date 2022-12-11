@@ -1,0 +1,17 @@
+
+test registeruser
+
+curl -X POST -H "Content-Type: application/json" -d "{\"name\": \"Kenny De Metter\",\"city\": \"Huizingen\",\"state\":\"Vlaams-Brabant\",\"zipCode\": \"1654\",\"hasPeanutAllergy\": \"false\",\"hasEggAllergy\": \"true\",\"hasDairyAllergy\": \"true\",\"isAdmin\": \"true\"}" http://localhost:6786/user/register-user 
+
+
+
+test update-profile
+
+curl -X PUT -H "Content-Type: application/json" -d "{\"hasPeanutAllergy\": \"false\",\"hasEggAllergy\": \"false\",\"hasDairyAllergy\": \"false\"}" http://localhost:6786/user/update-profile/Wendy%20Van%20Lerberghe 
+
+
+
+test submit-review
+
+curl -X POST -H "Content-Type: application/json" -d "{\"userName\": \"John Doe\",\"restaurantId\": \"33\",\"peanutScore\":\"5\",\"eggScore\": \"2\",\"dairyScore\": \"4\",\"commentary\": \"The restaurant felt very warm and welcoming. The waiter was very kindly and the price was reasonable. Had a pleasant visit and will come again!\",\"hasDairyAllergy\": \"false\",\"isAdmin\": \"true\"}" http://localhost:6786/review/submit-review
+curl -X POST -H "Content-Type: application/json" -d "{\"userName\": \"Andy De Metter\",\"restaurantId\": \"33\",\"peanutScore\":\"5\",\"eggScore\": \"2\",\"dairyScore\": \"4\",\"commentary\": \"The restaurant felt very warm and welcoming. The waiter was very kindly and the price was reasonable. Had a pleasant visit and will come again!\",\"hasDairyAllergy\": \"false\",\"isAdmin\": \"true\"}" http://localhost:6786/review/submit-review
